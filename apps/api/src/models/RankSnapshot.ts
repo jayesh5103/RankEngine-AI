@@ -1,37 +1,36 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
+
+export interface ICompetitorPosition {
+  domain: string;
+  position: number;
+}
 
 export interface IRankSnapshot extends Document {
-  trackedKeywordId: Types.ObjectId;
-  position?: number | null;
-  date: Date;
+  keywordId: Types.ObjectId;
+  projectId: Types.ObjectId;
+  position: number; // e.g. 1-100, or 101 if unranked
   aioPresence: boolean;
+  competitors: ICompetitorPosition[];
+  date: Date;
+  createdAt: Date;
 }
 
 const RankSnapshotSchema = new Schema<IRankSnapshot>({
-  trackedKeywordId: {
-    type: Schema.Types.ObjectId,
-    ref: 'TrackedKeyword',
-    required: true,
-  },
-  position: {
-    type: Number,
-    default: null, // Nullable if the page is not ranking in the top search results
-  },
-  date: {
-    type: Date,
-    required: true,
-    default: Date.now,
-  },
-  aioPresence: {
-    type: Boolean,
-    required: true,
-    default: false, // Whether the page appeared in an AI Overview (SGE) search block
-  },
+  keywordId: { type: Schema.Types.ObjectId, ref: 'TrackedKeyword', required: true, index: true },
+  projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true, index: true },
+  position: { type: Number, required: true },
+  aioPresence: { type: Boolean, default: false },
+  competitors: [
+    {
+      domain: { type: String, required: true },
+      position: { type: Number, required: true },
+    },
+  ],
+  date: { type: Date, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
-// Indexes: search snapshots by tracked keyword, and sort snapshots chronologically
-RankSnapshotSchema.index({ trackedKeywordId: 1 });
-RankSnapshotSchema.index({ trackedKeywordId: 1, date: -1 });
+// Index to find snaps by keyword and date
+RankSnapshotSchema.index({ keywordId: 1, date: 1 }, { unique: true });
 
-export const RankSnapshot = model<IRankSnapshot>('RankSnapshot', RankSnapshotSchema);
-export default RankSnapshot;
+export const RankSnapshot = mongoose.model<IRankSnapshot>('RankSnapshot', RankSnapshotSchema);

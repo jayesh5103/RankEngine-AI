@@ -21,7 +21,7 @@ out/
 .env.test.local
 .env.production.local
 *.env
-
+.env.example
 # Python files
 __pycache__/
 *.py[cod]

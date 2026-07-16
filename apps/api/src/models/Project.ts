@@ -6,6 +6,7 @@ export interface IProject extends Document {
   domain: string;
   stagingDomain?: string;
   createdAt: Date;
+  deletedAt?: Date | null;
 }
 
 const ProjectSchema = new Schema<IProject>({
@@ -32,10 +33,14 @@ const ProjectSchema = new Schema<IProject>({
     type: Date,
     default: Date.now,
   },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
-// Index to quickly fetch all projects owned by a specific user
-ProjectSchema.index({ ownerId: 1 });
+// Index to quickly fetch all active projects owned by a specific user
+ProjectSchema.index({ ownerId: 1, deletedAt: 1 });
 
 export const Project = model<IProject>('Project', ProjectSchema);
 export default Project;

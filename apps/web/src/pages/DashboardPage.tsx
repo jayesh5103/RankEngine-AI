@@ -1,0 +1,294 @@
+import { useState, useEffect } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
+
+interface Project {
+  _id: string;
+  name: string;
+  domain: string;
+  stagingDomain?: string;
+  createdAt: string;
+}
+
+// ── Tiny date formatter ───────────────────────────────────────────────────
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 30) return `${days} days ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+// ── New Project Modal ──────────────────────────────────────────────────────
+function NewProjectModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (p: Project) => void;
+}) {
+  const [name, setName] = useState('');
+  const [domain, setDomain] = useState('');
+  const [stagingDomain, setStagingDomain] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const { data } = await api.post<Project>('/projects', {
+        name: name.trim(),
+        domain: domain.trim(),
+        ...(stagingDomain.trim() ? { stagingDomain: stagingDomain.trim() } : {}),
+      });
+      onCreate(data);
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Failed to create project.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    /* Backdrop */
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-white">New Project</h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          {error && (
+            <div className="bg-red-950/60 border border-red-800/50 text-red-300 text-sm rounded-lg px-4 py-2.5">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="project-name">
+              Project name <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="project-name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+              placeholder="My Website SEO"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="project-domain">
+              Live domain <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="project-domain"
+              type="text"
+              required
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+              placeholder="example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="project-staging">
+              Staging domain{' '}
+              <span className="text-slate-600 font-normal">(optional)</span>
+            </label>
+            <input
+              id="project-staging"
+              type="text"
+              value={stagingDomain}
+              onChange={(e) => setStagingDomain(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+              placeholder="staging.example.com"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-lg border border-slate-700 text-sm text-slate-300 hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              id="create-project-submit-btn"
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-600/30"
+            >
+              {loading ? 'Creating…' : 'Create project'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Project Card ───────────────────────────────────────────────────────────
+function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      className="group bg-slate-900 border border-slate-800 hover:border-indigo-700/50 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-xl hover:shadow-indigo-950/30 hover:-translate-y-0.5"
+    >
+      {/* Icon + Domain */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-700/40 to-violet-700/40 border border-indigo-700/20 flex items-center justify-center text-indigo-300 font-bold text-sm">
+          {project.name.slice(0, 2).toUpperCase()}
+        </div>
+        {project.stagingDomain && (
+          <span className="text-[10px] font-medium bg-amber-900/40 border border-amber-700/30 text-amber-400 px-2 py-0.5 rounded-full">
+            Staging
+          </span>
+        )}
+      </div>
+
+      <h3 className="text-sm font-semibold text-white group-hover:text-indigo-200 transition-colors mb-1 truncate">
+        {project.name}
+      </h3>
+      <p className="text-xs text-slate-500 truncate mb-4">{project.domain}</p>
+
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-slate-600">{timeAgo(project.createdAt)}</span>
+        <span className="text-[10px] text-indigo-400 group-hover:text-indigo-300 font-medium transition-colors">
+          Open →
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard Page ─────────────────────────────────────────────────────────
+export default function DashboardPage() {
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api
+      .get<{ projects: Project[] }>('/projects')
+      .then(({ data }) => setProjects(data.projects ?? []))
+      .catch(() => setError('Failed to load projects.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCreate = (p: Project) => {
+    setProjects((prev) => [p, ...prev]);
+    setShowModal(false);
+    navigate(`/projects/${p._id}`);
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Projects</h1>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {projects.length === 0 && !loading
+              ? 'No projects yet — create your first one'
+              : `${projects.length} project${projects.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+        <button
+          id="new-project-btn"
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          New Project
+        </button>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mb-6 bg-red-950/60 border border-red-800/50 text-red-300 text-sm rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
+
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-40 animate-pulse"
+            >
+              <div className="h-10 w-10 rounded-xl bg-slate-800 mb-4" />
+              <div className="h-3 w-2/3 bg-slate-800 rounded mb-2" />
+              <div className="h-2.5 w-1/2 bg-slate-800 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && projects.length === 0 && (
+        <div className="text-center py-24">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 border border-slate-800 text-slate-600 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-1">No projects yet</h2>
+          <p className="text-slate-500 text-sm mb-6">Create a project to start crawling and optimizing your content.</p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30"
+          >
+            Create your first project
+          </button>
+        </div>
+      )}
+
+      {/* Project grid */}
+      {!loading && projects.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((p) => (
+            <ProjectCard
+              key={p._id}
+              project={p}
+              onClick={() => navigate(`/projects/${p._id}`)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <NewProjectModal onClose={() => setShowModal(false)} onCreate={handleCreate} />
+      )}
+    </div>
+  );
+}

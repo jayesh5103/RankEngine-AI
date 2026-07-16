@@ -37,8 +37,7 @@ const UserSchema = new Schema<IUser>({
   },
 });
 
-// Create appropriate unique index for email
-UserSchema.index({ email: 1 }, { unique: true });
+// Mongoose unique constraint on email field serves as the unique index
 
 export const User = model<IUser>('User', UserSchema);
 export default User;

@@ -19,6 +19,36 @@ const envSchema = z.object({
   JWT_EXPIRY: z.string({
     required_error: 'JWT_EXPIRY is required',
   }),
+  SERP_API_KEY: z.string().default('mock-serp-key'),
+  SERP_API_PROVIDER: z.string().default('mock-provider'),
+  LLM_API_KEY: z.string().default('mock-llm-key'),
+
+  /**
+   * 32-byte AES-256 key expressed as 64 hex characters.
+   * Used by src/utils/encryption.ts to encrypt sensitive fields at rest
+   * (e.g. staging credentials, stored API keys).
+   *
+   * Generate with:
+   *   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   *
+   * Defaults to a development-only placeholder when NODE_ENV !== 'production'.
+   * In production this MUST be set to a cryptographically random value.
+   */
+  ENCRYPTION_KEY: z.string()
+    .length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
+    .default('0000000000000000000000000000000000000000000000000000000000000000'),
+
+  /**
+   * Allowed CORS origin for the frontend.  Set to your Vite dev URL locally
+   * and to your production domain in CI/production.
+   * Example: http://localhost:5173  or  https://app.rankengine.io
+   */
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+
+  /** Global rate-limit window in milliseconds (default: 15 minutes) */
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
+  /** Global rate-limit max requests per window per IP (default: 200) */
+  RATE_LIMIT_MAX: z.coerce.number().default(200),
 });
 
 const parseEnv = () => {
@@ -29,6 +59,15 @@ const parseEnv = () => {
     result.error.issues.forEach((issue) => {
       console.error(`   - [${issue.path.join('.')}]: ${issue.message}`);
     });
+    process.exit(1);
+  }
+
+  // Warn loudly if the encryption key is the dev placeholder in production
+  if (
+    result.data.NODE_ENV === 'production' &&
+    result.data.ENCRYPTION_KEY === '0000000000000000000000000000000000000000000000000000000000000000'
+  ) {
+    console.error('❌ ENCRYPTION_KEY is using the default placeholder in production. This is insecure. Set a real key.');
     process.exit(1);
   }
 
