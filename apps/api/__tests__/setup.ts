@@ -9,9 +9,10 @@ jest.mock('mongodb-memory-server', () => {
       MongoMemoryServer: {
         create: jest.fn().mockResolvedValue({
           getUri: () => {
-            // Use unique database names per Jest worker to prevent concurrent test interference
+            // Use 127.0.0.1 instead of localhost to prevent IPv6 lookup issues in CI runners.
+            // Use unique database names per Jest worker to prevent concurrent test interference.
             const workerId = process.env.JEST_WORKER_ID || '1';
-            return `mongodb://localhost:27017/rankengine_test_${workerId}`;
+            return `mongodb://127.0.0.1:27017/rankengine_test_${workerId}`;
           },
           stop: jest.fn().mockResolvedValue(true),
         }),

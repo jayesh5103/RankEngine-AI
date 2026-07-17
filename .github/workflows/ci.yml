@@ -44,8 +44,8 @@ jobs:
         run: npm test --workspace=apps/api
         env:
           NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/rankengine_test
-          REDIS_URL: redis://localhost:6379
+          MONGODB_URI: mongodb://127.0.0.1:27017/rankengine_test
+          REDIS_URL: redis://127.0.0.1:6379
           JWT_SECRET: test_secret_key_long_enough_for_jwt
           JWT_EXPIRY: 1h
           ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
@@ -83,7 +83,9 @@ jobs:
 
       - name: Install Worker dependencies
         working-directory: apps/worker
-        run: poetry install
+        run: |
+          poetry lock --no-update
+          poetry install
 
       - name: Install Playwright browsers and dependencies
         working-directory: apps/worker
@@ -94,10 +96,11 @@ jobs:
         run: poetry run pytest
         env:
           PYTHONPATH: .
-          MONGODB_URI: mongodb://localhost:27017/rankengine_test
-          REDIS_URL: redis://localhost:6379
+          MONGODB_URI: mongodb://127.0.0.1:27017/rankengine_test
+          REDIS_URL: redis://127.0.0.1:6379
           LLM_API_KEY: mock-llm-key
           PLAYWRIGHT_HEADLESS: true
+
 
   docker-ci:
     name: Docker Builds Verification
