@@ -9,8 +9,8 @@ RUN pip install --no-cache-dir poetry
 # Configure poetry to link packages globally inside the container
 RUN poetry config virtualenvs.create false
 
-# Copy lockfile definitions
-COPY apps/worker/pyproject.toml apps/worker/poetry.lock ./
+# Copy pyproject.toml
+COPY apps/worker/pyproject.toml ./
 
 # Generate lock file and install python dependencies
 RUN poetry lock --no-update && poetry install --no-root --no-interaction --no-ansi
