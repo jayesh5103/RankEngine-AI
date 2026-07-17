@@ -1,5 +1,5 @@
 import { rateLimit, Store, Options, IncrementResponse } from 'express-rate-limit';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import IORedis from 'ioredis';
 import config from '../config';
 
