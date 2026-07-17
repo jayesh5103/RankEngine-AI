@@ -13,7 +13,7 @@ RUN poetry config virtualenvs.create false
 COPY apps/worker/pyproject.toml ./
 
 # Generate lock file and install python dependencies
-RUN poetry lock --no-update && poetry install --no-root --no-interaction --no-ansi
+RUN poetry lock && poetry install --no-root --no-interaction --no-ansi
 
 # Copy application files
 COPY apps/worker/ ./

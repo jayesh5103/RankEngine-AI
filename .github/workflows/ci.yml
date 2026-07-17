@@ -84,7 +84,7 @@ jobs:
       - name: Install Worker dependencies
         working-directory: apps/worker
         run: |
-          poetry lock --no-update
+          poetry lock
           poetry install
 
       - name: Install Playwright browsers and dependencies
