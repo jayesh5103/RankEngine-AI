@@ -1,0 +1,116 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  node-ci:
+    name: Node.js CI (API & Web)
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build monorepo packages
+        run: npm run build
+
+      - name: Run API unit tests
+        run: npm test --workspace=apps/api
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/rankengine_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_secret_key_long_enough_for_jwt
+          JWT_EXPIRY: 1h
+          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+          LLM_API_KEY: mock-llm-key
+          SERP_API_KEY: mock-serp-key
+          SERP_API_PROVIDER: mock
+
+  python-ci:
+    name: Python CI (Worker)
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Worker dependencies
+        working-directory: apps/worker
+        run: poetry install
+
+      - name: Install Playwright browsers and dependencies
+        working-directory: apps/worker
+        run: poetry run playwright install --with-deps chromium
+
+      - name: Run Worker unit tests
+        working-directory: apps/worker
+        run: poetry run pytest
+        env:
+          PYTHONPATH: .
+          MONGODB_URI: mongodb://localhost:27017/rankengine_test
+          REDIS_URL: redis://localhost:6379
+          LLM_API_KEY: mock-llm-key
+          PLAYWRIGHT_HEADLESS: true
+
+  docker-ci:
+    name: Docker Builds Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build API Docker Image
+        run: docker build -f apps/api/Dockerfile -t rankengine-api:test .
+
+      - name: Build Web Docker Image
+        run: docker build -f apps/web/Dockerfile -t rankengine-web:test .
+
+      - name: Build Worker Docker Image
+        run: docker build -f apps/worker/Dockerfile -t rankengine-worker:test .

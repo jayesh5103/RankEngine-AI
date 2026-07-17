@@ -19,6 +19,57 @@ services:
     volumes:
       - redis_data:/data
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: rankengine_api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/rankengine
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=development_jwt_secret_must_be_long_enough
+      - JWT_EXPIRY=7d
+      - ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+      - CORS_ORIGIN=http://localhost:8080
+      - LLM_API_KEY=mock-llm-key
+      - SERP_API_KEY=mock-serp-key
+      - SERP_API_PROVIDER=mock
+    depends_on:
+      - mongodb
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: rankengine_worker
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/rankengine
+      - REDIS_URL=redis://redis:6379
+      - LLM_API_KEY=mock-llm-key
+      - PLAYWRIGHT_HEADLESS=true
+      - SCALE_UP_THRESHOLD=10
+      - SCALE_CHECK_INTERVAL=30
+    depends_on:
+      - mongodb
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: rankengine_web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
 volumes:
   mongodb_data:
     driver: local
