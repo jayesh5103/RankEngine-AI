@@ -449,10 +449,31 @@ async def run_migration_check(crawl_job_id: str, live_domain: str, staging_domai
                 async with sem:
                     context = None
                     page = None
+                    response = None
+                    max_retries = 2
                     try:
-                        context = await browser.new_context()
-                        page = await context.new_page()
-                        response = await page.goto(url, timeout=10000)
+                        for attempt in range(max_retries + 1):
+                            try:
+                                context = await browser.new_context()
+                                page = await context.new_page()
+                                response = await page.goto(url, timeout=10000)
+                                if response:
+                                    if response.status == 429 or response.status >= 500:
+                                        raise IOError(f"HTTP Status {response.status}")
+                                    break
+                            except Exception as exc:
+                                if page:
+                                    await page.close()
+                                if context:
+                                    await context.close()
+                                page, context = None, None
+                                if attempt < max_retries:
+                                    delay = 2 ** attempt
+                                    log_json("WARNING", "harvester_retry", url=url, attempt=attempt+1, delay=delay, reason=str(exc))
+                                    await asyncio.sleep(delay)
+                                else:
+                                    raise exc
+
                         if response and response.status == 200:
                             discovered_urls.append(url)
                             html = await page.content()
@@ -511,13 +532,33 @@ async def run_migration_check(crawl_job_id: str, live_domain: str, staging_domai
             async with check_sem:
                 context = None
                 page = None
+                response = None
+                max_retries = 2
                 try:
-                    context = await browser.new_context()
-                    page = await context.new_page()
-                    
-                    # Playwright follows redirects automatically.
-                    # We will resolve the final page and inspect request chain.
-                    response = await page.goto(staging_page_url, timeout=15000)
+                    for attempt in range(max_retries + 1):
+                        try:
+                            context = await browser.new_context()
+                            page = await context.new_page()
+                            
+                            # Playwright follows redirects automatically.
+                            # We will resolve the final page and inspect request chain.
+                            response = await page.goto(staging_page_url, timeout=15000)
+                            if response:
+                                if response.status == 429 or response.status >= 500:
+                                    raise IOError(f"HTTP Status {response.status}")
+                                break
+                        except Exception as exc:
+                            if page:
+                                await page.close()
+                            if context:
+                                await context.close()
+                            page, context = None, None
+                            if attempt < max_retries:
+                                delay = 2 ** attempt
+                                log_json("WARNING", "check_redirect_retry", url=staging_page_url, attempt=attempt+1, delay=delay, reason=str(exc))
+                                await asyncio.sleep(delay)
+                            else:
+                                raise exc
                     
                     # Trace redirect chain
                     redirects = []

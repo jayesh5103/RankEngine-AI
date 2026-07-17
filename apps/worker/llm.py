@@ -2,11 +2,13 @@ import json
 import traceback
 from typing import List, Literal
 from pydantic import BaseModel, Field, ValidationError
+import groq
 from groq import AsyncGroq
 from config import settings
 from db import db
 from bson import ObjectId
 import datetime
+import asyncio
 
 # =========================================================================
 # CRITICAL SECURITY NOTE:
@@ -50,6 +52,22 @@ def summarize_issues(issues: List[dict]) -> str:
             f"- [{severity.upper()}] Category: {category} | Issue: {desc} | Affected URLs: [{urls_str}]"
         )
     return "\n".join(summary_lines)
+
+async def call_groq_with_backoff(client: AsyncGroq, **kwargs):
+    max_retries = 3
+    base_delay = 1.0
+    for attempt in range(max_retries + 1):
+        try:
+            return await client.chat.completions.create(**kwargs)
+        except Exception as e:
+            # Identify typical transient/retriable errors (rate limits, timeouts, connection issues, or standard GroqErrors)
+            is_transient = isinstance(e, (groq.APIConnectionError, groq.APITimeoutError, groq.RateLimitError, groq.InternalServerError)) or "Rate limit" in str(e)
+            if (is_transient or isinstance(e, groq.GroqError)) and attempt < max_retries:
+                delay = base_delay * (2 ** attempt)
+                print(f"[LLM FixList]: Transient Groq error: {e}. Retrying in {delay}s (attempt {attempt + 1}/{max_retries + 1})...")
+                await asyncio.sleep(delay)
+            else:
+                raise e
 
 async def generate_fix_list(crawl_job_id: str, raw_issues: List[dict]):
     if not raw_issues:
@@ -103,7 +121,8 @@ JSON Schema format:
     for attempt in range(attempts):
         try:
             print(f"[LLM FixList]: Requesting Groq LLM completion (attempt {attempt + 1})...")
-            chat_completion = await client.chat.completions.create(
+            chat_completion = await call_groq_with_backoff(
+                client,
                 messages=[
                     {
                         "role": "user",

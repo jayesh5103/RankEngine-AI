@@ -19,6 +19,8 @@ beautifulsoup4 = "*"
 pytest = "*"
 pytest-asyncio = "*"
 groq = "*"
+httpx = "*"
+redis = {extras = ["hiredis"], version = "*"}
 
 [build-system]
 requires = ["poetry-core"]
