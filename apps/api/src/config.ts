@@ -59,6 +59,12 @@ const envSchema = z.object({
 });
 
 const parseEnv = () => {
+  if (process.env.REDIS_URL && process.env.REDIS_URL.includes('localhost')) {
+    process.env.REDIS_URL = process.env.REDIS_URL.replace('localhost', '127.0.0.1');
+  }
+  if (process.env.MONGODB_URI && process.env.MONGODB_URI.includes('localhost')) {
+    process.env.MONGODB_URI = process.env.MONGODB_URI.replace('localhost', '127.0.0.1');
+  }
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
