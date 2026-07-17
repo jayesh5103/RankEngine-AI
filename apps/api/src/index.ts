@@ -6,10 +6,11 @@ import { initRankTrackerScheduler } from './services/rankTrackerService';
 const PORT = config.PORT;
 
 // Connect to MongoDB using the validated MONGODB_URI
-mongoose.connect(config.MONGODB_URI)
+mongoose
+  .connect(config.MONGODB_URI)
   .then(() => {
     console.log('[server]: MongoDB connection established successfully.');
-    
+
     // Initialize scheduled rank tracking jobs
     initRankTrackerScheduler();
 

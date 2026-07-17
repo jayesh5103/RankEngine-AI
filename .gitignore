@@ -32,7 +32,6 @@ __pycache__/
 venv/
 ENV/
 env/
-poetry.lock
 
 # OS and IDE files
 .DS_Store
