@@ -3,13 +3,22 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const ROLE_OPTIONS = [
+  { value: 'agency_owner', label: 'Agency Owner' },
+  { value: 'marketer', label: 'Marketer' },
+  { value: 'developer', label: 'Developer' },
+] as const;
+
+type Role = (typeof ROLE_OPTIONS)[number]['value'];
+
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [role, setRole] = useState<Role>('agency_owner');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,10 +27,17 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(email, password, role, companyName);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Registration failed. Please try again.');
+      const details = err?.response?.data?.details;
+      if (details) {
+        // Show first Zod field error
+        const first = Object.values(details).flat()[0] as string;
+        setError(first ?? 'Registration failed. Please try again.');
+      } else {
+        setError(err?.response?.data?.error ?? 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -50,18 +66,18 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="reg-name">
-              Full name
+            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="reg-company">
+              Company name
             </label>
             <input
-              id="reg-name"
+              id="reg-company"
               type="text"
               required
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              autoComplete="organization"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
-              placeholder="Jane Smith"
+              placeholder="Acme Agency"
             />
           </div>
 
@@ -96,6 +112,25 @@ export default function RegisterPage() {
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
               placeholder="Min. 8 characters"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5" htmlFor="reg-role">
+              Your role
+            </label>
+            <select
+              id="reg-role"
+              required
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors appearance-none cursor-pointer"
+            >
+              {ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button

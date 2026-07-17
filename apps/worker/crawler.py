@@ -253,7 +253,7 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
     for page in crawled_pages:
         url = page.get("url")
         status = page.get("statusCode", 200)
-        
+
         # Check HTTP Errors
         if status >= 400:
             issues.append({
@@ -264,7 +264,7 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
                 "description": f"Page returned error status code {status}",
                 "recommendation": "Fix routing errors, database queries, or server-side configurations."
             })
-            
+
         # Check Title Issues
         title = page.get("metaTitle", "")
         if not title:
@@ -276,7 +276,16 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
                 "description": "Page title is missing or empty",
                 "recommendation": "Add a unique and descriptive meta title tag of 50-60 characters to improve visibility."
             })
-            
+        else:
+            issues.append({
+                "crawlJobId": ObjectId(crawl_job_id),
+                "severity": "passed",
+                "category": "meta",
+                "url": url,
+                "description": "Meta title is present and non-empty",
+                "recommendation": ""
+            })
+
         # Check Description Issues
         desc = page.get("metaDescription", "")
         if not desc:
@@ -288,7 +297,16 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
                 "description": "Meta description is missing or empty",
                 "recommendation": "Provide a descriptive snippet of 150-160 characters summarizing the page subject."
             })
-            
+        else:
+            issues.append({
+                "crawlJobId": ObjectId(crawl_job_id),
+                "severity": "passed",
+                "category": "meta",
+                "url": url,
+                "description": "Meta description is present and non-empty",
+                "recommendation": ""
+            })
+
         # Check H1 Header count
         h1s = page.get("h1", [])
         if len(h1s) != 1:
@@ -302,7 +320,16 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
                 "description": desc_text,
                 "recommendation": "Configure templates to output exactly one H1 header representing primary subject."
             })
-            
+        else:
+            issues.append({
+                "crawlJobId": ObjectId(crawl_job_id),
+                "severity": "passed",
+                "category": "meta",
+                "url": url,
+                "description": "Page has exactly one H1 tag",
+                "recommendation": ""
+            })
+
         # Check structured schema issues and opportunities
         html = page.get("html")
         if html:
@@ -313,6 +340,7 @@ def identify_raw_seo_issues(crawled_pages: list, crawl_job_id: str) -> list:
             except Exception as e:
                 log_json("ERROR", "schema_validation_error", url=url, error=str(e))
     return issues
+
 
 async def crawl_page_with_retry(browser, url: str, crawl_job_id: str) -> dict | None:
     max_retries = 3
