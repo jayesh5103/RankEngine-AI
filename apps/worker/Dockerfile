@@ -1,18 +1,12 @@
-# Production build for Playwright-backed Python Worker
-FROM python:3.11-slim
+# Production build for Python Worker using official Playwright pre-built image
+FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
 
 WORKDIR /app
 
-# Install system utilities and curl for dependency management
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install poetry for lockfile resolution
+# Install poetry for lockfile dependency resolution
 RUN pip install --no-cache-dir poetry
 
-# Configure poetry to link package dependencies globally inside the container
+# Configure poetry to link packages globally inside the container
 RUN poetry config virtualenvs.create false
 
 # Copy lockfile definitions
@@ -20,9 +14,6 @@ COPY apps/worker/pyproject.toml apps/worker/poetry.lock ./
 
 # Install python dependencies
 RUN poetry install --no-root --no-interaction --no-ansi
-
-# Install Playwright browser binaries and all required OS system libraries for headless Chromium
-RUN playwright install --with-deps chromium
 
 # Copy application files
 COPY apps/worker/ ./
