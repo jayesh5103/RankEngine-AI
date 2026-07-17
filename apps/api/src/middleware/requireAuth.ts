@@ -21,7 +21,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const decoded = jwt.verify(token, config.JWT_SECRET) as TokenPayload;
-    
+
     // Attach decoded user info to request
     req.user = {
       userId: decoded.userId,

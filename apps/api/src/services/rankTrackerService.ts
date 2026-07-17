@@ -88,7 +88,7 @@ export const collectRankSnapshotForKeyword = async (
               const project = await Project.findById(projectId);
               if (project) {
                 const message = `Competitor "${comp}" jumped ${improvement} positions from #${prevPos} to #${compPos} for keyword "${keyword}"`;
-                
+
                 // Write Notification Document
                 const notification = new Notification({
                   userId: project.ownerId,

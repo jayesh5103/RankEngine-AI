@@ -168,7 +168,8 @@ it('fires notification + email when competitor improves by exactly 4 positions',
   expect(notifications[0].read).toBe(false);
 
   // Email should have fired once
-  const emails: { to: string; subject: string; body: string }[] = (global as any).__emailCalls ?? [];
+  const emails: { to: string; subject: string; body: string }[] =
+    (global as any).__emailCalls ?? [];
   expect(emails).toHaveLength(1);
   expect(emails[0].to).toBe('owner@example.com');
   expect(emails[0].subject).toContain(KEYWORD);

@@ -98,10 +98,38 @@ beforeAll(async () => {
 
   // Seed AuditIssues for checklist
   await AuditIssue.create([
-    { crawlJobId: job._id, severity: 'critical', category: 'redirect', url: 'https://site.com/a', description: 'issue 1', recommendation: 'rec 1' },
-    { crawlJobId: job._id, severity: 'warning', category: 'meta', url: 'https://site.com/b', description: 'issue 2', recommendation: 'rec 2' },
-    { crawlJobId: job._id, severity: 'warning', category: 'meta', url: 'https://site.com/c', description: 'issue 3', recommendation: 'rec 3' },
-    { crawlJobId: job._id, severity: 'passed', category: 'meta', url: 'https://site.com/d', description: 'issue 4', recommendation: 'rec 4' },
+    {
+      crawlJobId: job._id,
+      severity: 'critical',
+      category: 'redirect',
+      url: 'https://site.com/a',
+      description: 'issue 1',
+      recommendation: 'rec 1',
+    },
+    {
+      crawlJobId: job._id,
+      severity: 'warning',
+      category: 'meta',
+      url: 'https://site.com/b',
+      description: 'issue 2',
+      recommendation: 'rec 2',
+    },
+    {
+      crawlJobId: job._id,
+      severity: 'warning',
+      category: 'meta',
+      url: 'https://site.com/c',
+      description: 'issue 3',
+      recommendation: 'rec 3',
+    },
+    {
+      crawlJobId: job._id,
+      severity: 'passed',
+      category: 'meta',
+      url: 'https://site.com/d',
+      description: 'issue 4',
+      recommendation: 'rec 4',
+    },
   ]);
 });
 
@@ -139,9 +167,7 @@ describe('Checklist REST API', () => {
   });
 
   it('should reject requests (401) without authentication token', async () => {
-    await request
-      .get(`/api/crawl-jobs/${crawlJobId}/checklist`)
-      .expect(401);
+    await request.get(`/api/crawl-jobs/${crawlJobId}/checklist`).expect(401);
   });
 
   it('should return 404 for checklists on non-existent jobs', async () => {

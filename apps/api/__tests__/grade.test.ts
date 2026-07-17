@@ -61,10 +61,7 @@ afterAll(async () => {
 
 describe('Content Grader API', () => {
   it('should reject requests without authorization token', async () => {
-    await request
-      .post('/api/content/grade')
-      .send({ text: 'Some SEO text content.' })
-      .expect(401);
+    await request.post('/api/content/grade').send({ text: 'Some SEO text content.' }).expect(401);
   });
 
   it('should score low on entityCoverage when 0 shared entities are present in text', async () => {

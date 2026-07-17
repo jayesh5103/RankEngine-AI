@@ -90,9 +90,7 @@ router.get('/:id/keywords', requireAuth, async (req: Request, res: Response) => 
     const results = await Promise.all(
       keywords.map(async (kw) => {
         // Fetch last 7 days of snaps for trend arrow / sparks chart
-        const snaps = await RankSnapshot.find({ keywordId: kw._id })
-          .sort({ date: -1 })
-          .limit(7);
+        const snaps = await RankSnapshot.find({ keywordId: kw._id }).sort({ date: -1 }).limit(7);
 
         // Reverse to chronological order (oldest first)
         const sortedSnaps = [...snaps].reverse();
@@ -162,9 +160,7 @@ router.get('/:id/keywords/:keywordId/history', requireAuth, async (req: Request,
     }
 
     // Retrieve last 30 snapshots
-    const snaps = await RankSnapshot.find({ keywordId: kw._id })
-      .sort({ date: -1 })
-      .limit(30);
+    const snaps = await RankSnapshot.find({ keywordId: kw._id }).sort({ date: -1 }).limit(30);
 
     // Reverse to chronological order (oldest first)
     const history = [...snaps].reverse().map((s) => ({

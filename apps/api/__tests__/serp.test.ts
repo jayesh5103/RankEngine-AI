@@ -172,10 +172,7 @@ describe('SERP Analysis API', () => {
   });
 
   it('should reject requests without authorization token', async () => {
-    await request
-      .post('/api/content/serp-analysis')
-      .send({ keyword: 'seo audit' })
-      .expect(401);
+    await request.post('/api/content/serp-analysis').send({ keyword: 'seo audit' }).expect(401);
   });
 
   it('should reject empty keyword parameters', async () => {

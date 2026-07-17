@@ -35,7 +35,7 @@ export class RealSerpProvider implements ISerpProvider {
             num: 10,
             engine: 'google',
           },
-          timeout: 8000
+          timeout: 8000,
         });
         const results = response.data.organic_results || [];
         return results.slice(0, 10).map((r: any) => ({
@@ -47,7 +47,9 @@ export class RealSerpProvider implements ISerpProvider {
         return new MockSerpProvider().fetchTop10(keyword);
       }
     } else {
-      console.log(`[RealSerpProvider]: Swappable provider '${provider}' not fully implemented. Falling back to Mock.`);
+      console.log(
+        `[RealSerpProvider]: Swappable provider '${provider}' not fully implemented. Falling back to Mock.`
+      );
       return new MockSerpProvider().fetchTop10(keyword);
     }
   }
@@ -67,16 +69,16 @@ export const getSerpProvider = (): ISerpProvider => {
 export const extractTextAndWordCount = (html: string): { text: string; wordCount: number } => {
   try {
     const $ = cheerio.load(html);
-    
+
     // Remove unwanted script, style, and iframe tags
     $('script, style, iframe, noscript, svg, header, footer, nav').remove();
-    
+
     const text = $('body').text().replace(/\s+/g, ' ').trim();
-    const words = text.split(/\s+/).filter(w => w.length > 0);
-    
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
+
     return {
-      text: text.slice(0, 1500),  // Cap characters size to control prompt token limits
-      wordCount: words.length
+      text: text.slice(0, 1500), // Cap characters size to control prompt token limits
+      wordCount: words.length,
     };
   } catch {
     return { text: '', wordCount: 0 };
@@ -137,7 +139,7 @@ Do NOT wrap the output in markdown fences (e.g. \`\`\`json), do NOT include any 
           Authorization: `Bearer ${config.LLM_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        timeout: 10000
+        timeout: 10000,
       }
     );
 

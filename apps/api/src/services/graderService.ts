@@ -60,20 +60,20 @@ export const gradeContent = (
 
   // Filter out heading lines before splitting text into paragraphs
   const paragraphText = lines
-    .filter(line => !line.trim().startsWith('#') && !/<h[1-6]/i.test(line.trim()))
+    .filter((line) => !line.trim().startsWith('#') && !/<h[1-6]/i.test(line.trim()))
     .join('\n');
 
   // Split paragraphs by blank lines or HTML <p> tags
   const paragraphs = paragraphText
     .split(/(?:\n\s*\n|<p[^>]*>)/i)
-    .map(p => p.replace(/<[^>]*>/g, '').trim())
-    .filter(p => p.length > 0);
+    .map((p) => p.replace(/<[^>]*>/g, '').trim())
+    .filter((p) => p.length > 0);
 
   let paragraphScore = 100;
   if (paragraphs.length > 0) {
     let goodParagraphs = 0;
     for (const p of paragraphs) {
-      const words = p.split(/\s+/).filter(w => w.length > 0).length;
+      const words = p.split(/\s+/).filter((w) => w.length > 0).length;
       // Ideal paragraph length distribution: between 20 and 150 words
       if (words >= 20 && words <= 150) {
         goodParagraphs++;
@@ -87,22 +87,19 @@ export const gradeContent = (
   const structureScore = Math.round(0.4 * headingScore + 0.6 * paragraphScore);
 
   // 3. Readability Score (Flesch Readability Ease approximation)
-  const sentences = rawText
-    .split(/[.!?]+(?:[ \t\r\n]+|$)/)
-    .filter(s => s.trim().length > 0);
-  
-  const words = rawText
-    .split(/\s+/)
-    .filter(w => w.length > 0);
+  const sentences = rawText.split(/[.!?]+(?:[ \t\r\n]+|$)/).filter((s) => s.trim().length > 0);
+
+  const words = rawText.split(/\s+/).filter((w) => w.length > 0);
 
   let readability = 0;
   if (words.length > 0) {
     const totalSentences = sentences.length > 0 ? sentences.length : 1;
     const totalWords = words.length;
     const totalSyllables = words.reduce((sum, w) => sum + countSyllables(w), 0);
-    
+
     // Formula: 206.835 - 1.015 * (words/sentences) - 84.6 * (syllables/words)
-    const ease = 206.835 - 1.015 * (totalWords / totalSentences) - 84.6 * (totalSyllables / totalWords);
+    const ease =
+      206.835 - 1.015 * (totalWords / totalSentences) - 84.6 * (totalSyllables / totalWords);
     readability = Math.round(Math.max(0, Math.min(100, ease)));
   }
 

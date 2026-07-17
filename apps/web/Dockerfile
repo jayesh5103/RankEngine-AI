@@ -2,10 +2,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy root configurations and workspace declarations
+# Copy root configurations and workspace declarations for all packages in the monorepo
 COPY package.json package-lock.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
 
 # Install build dependencies
 RUN npm ci --workspace=packages/shared-types --workspace=apps/web

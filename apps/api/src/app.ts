@@ -54,8 +54,8 @@ app.use(
 const globalRateLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX,
-  standardHeaders: true,  // Return RateLimit-* headers per RFC 6585
-  legacyHeaders: false,   // Disable X-RateLimit-* headers
+  standardHeaders: true, // Return RateLimit-* headers per RFC 6585
+  legacyHeaders: false, // Disable X-RateLimit-* headers
   message: { error: 'Too many requests. Please slow down and try again.' },
   skip: () => process.env.NODE_ENV === 'test', // Never rate-limit during tests
 });

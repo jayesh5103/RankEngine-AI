@@ -2,10 +2,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy root configurations and workspace declarations
+# Copy root configurations and workspace declarations for all packages in the monorepo
 COPY package.json package-lock.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
 
 # Install build dependencies
 RUN npm ci --workspace=packages/shared-types --workspace=apps/api
@@ -23,10 +24,11 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy root package files
+# Copy root package files and workspace definitions
 COPY package.json package-lock.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
 
 # Install only production dependencies
 RUN npm ci --omit=dev --workspace=packages/shared-types --workspace=apps/api

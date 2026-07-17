@@ -7,15 +7,21 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  MONGODB_URI: z.string({
-    required_error: 'MONGODB_URI is required',
-  }).url('MONGODB_URI must be a valid connection URL'),
-  REDIS_URL: z.string({
-    required_error: 'REDIS_URL is required',
-  }).url('REDIS_URL must be a valid connection URL'),
-  JWT_SECRET: z.string({
-    required_error: 'JWT_SECRET is required',
-  }).min(8, 'JWT_SECRET must be at least 8 characters long'),
+  MONGODB_URI: z
+    .string({
+      required_error: 'MONGODB_URI is required',
+    })
+    .url('MONGODB_URI must be a valid connection URL'),
+  REDIS_URL: z
+    .string({
+      required_error: 'REDIS_URL is required',
+    })
+    .url('REDIS_URL must be a valid connection URL'),
+  JWT_SECRET: z
+    .string({
+      required_error: 'JWT_SECRET is required',
+    })
+    .min(8, 'JWT_SECRET must be at least 8 characters long'),
   JWT_EXPIRY: z.string({
     required_error: 'JWT_EXPIRY is required',
   }),
@@ -34,7 +40,8 @@ const envSchema = z.object({
    * Defaults to a development-only placeholder when NODE_ENV !== 'production'.
    * In production this MUST be set to a cryptographically random value.
    */
-  ENCRYPTION_KEY: z.string()
+  ENCRYPTION_KEY: z
+    .string()
     .length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
     .default('0000000000000000000000000000000000000000000000000000000000000000'),
 
@@ -65,9 +72,12 @@ const parseEnv = () => {
   // Warn loudly if the encryption key is the dev placeholder in production
   if (
     result.data.NODE_ENV === 'production' &&
-    result.data.ENCRYPTION_KEY === '0000000000000000000000000000000000000000000000000000000000000000'
+    result.data.ENCRYPTION_KEY ===
+      '0000000000000000000000000000000000000000000000000000000000000000'
   ) {
-    console.error('❌ ENCRYPTION_KEY is using the default placeholder in production. This is insecure. Set a real key.');
+    console.error(
+      '❌ ENCRYPTION_KEY is using the default placeholder in production. This is insecure. Set a real key.'
+    );
     process.exit(1);
   }
 

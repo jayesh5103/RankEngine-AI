@@ -160,9 +160,30 @@ describe('Crawl Jobs REST API & Background Queues', () => {
 
       // Seed mock audit issues for the completed job
       await AuditIssue.create([
-        { crawlJobId: cJob._id, severity: 'critical', category: 'meta', url: 'http://site.com', description: 'desc', recommendation: 'rec' },
-        { crawlJobId: cJob._id, severity: 'critical', category: 'meta', url: 'http://site.com', description: 'desc', recommendation: 'rec' },
-        { crawlJobId: cJob._id, severity: 'warning', category: 'meta', url: 'http://site.com', description: 'desc', recommendation: 'rec' },
+        {
+          crawlJobId: cJob._id,
+          severity: 'critical',
+          category: 'meta',
+          url: 'http://site.com',
+          description: 'desc',
+          recommendation: 'rec',
+        },
+        {
+          crawlJobId: cJob._id,
+          severity: 'critical',
+          category: 'meta',
+          url: 'http://site.com',
+          description: 'desc',
+          recommendation: 'rec',
+        },
+        {
+          crawlJobId: cJob._id,
+          severity: 'warning',
+          category: 'meta',
+          url: 'http://site.com',
+          description: 'desc',
+          recommendation: 'rec',
+        },
       ]);
     });
 

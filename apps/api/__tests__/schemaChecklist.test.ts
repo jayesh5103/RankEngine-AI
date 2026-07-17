@@ -81,9 +81,30 @@ beforeAll(async () => {
 
   // Seed schema issues and metadata issues
   await AuditIssue.create([
-    { crawlJobId: job._id, severity: 'critical', category: 'schema', url: 'https://site.com/faq', description: 'FAQPage missing answer', recommendation: 'Fix answer text' },
-    { crawlJobId: job._id, severity: 'warning', category: 'meta', url: 'https://site.com/about', description: 'Meta desc missing', recommendation: 'Fix description' },
-    { crawlJobId: job._id, severity: 'warning', category: 'schema', url: 'https://site.com/how-to', description: 'Missed opportunity: HowTo', recommendation: 'Add HowTo' }
+    {
+      crawlJobId: job._id,
+      severity: 'critical',
+      category: 'schema',
+      url: 'https://site.com/faq',
+      description: 'FAQPage missing answer',
+      recommendation: 'Fix answer text',
+    },
+    {
+      crawlJobId: job._id,
+      severity: 'warning',
+      category: 'meta',
+      url: 'https://site.com/about',
+      description: 'Meta desc missing',
+      recommendation: 'Fix description',
+    },
+    {
+      crawlJobId: job._id,
+      severity: 'warning',
+      category: 'schema',
+      url: 'https://site.com/how-to',
+      description: 'Missed opportunity: HowTo',
+      recommendation: 'Add HowTo',
+    },
   ]);
 });
 

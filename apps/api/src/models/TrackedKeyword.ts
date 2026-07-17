@@ -16,4 +16,7 @@ const TrackedKeywordSchema = new Schema<ITrackedKeyword>({
   createdAt: { type: Date, default: Date.now },
 });
 
-export const TrackedKeyword = mongoose.model<ITrackedKeyword>('TrackedKeyword', TrackedKeywordSchema);
+export const TrackedKeyword = mongoose.model<ITrackedKeyword>(
+  'TrackedKeyword',
+  TrackedKeywordSchema
+);

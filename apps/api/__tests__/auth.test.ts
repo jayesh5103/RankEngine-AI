@@ -70,10 +70,7 @@ describe('Authentication Flow', () => {
 
   describe('POST /api/auth/register', () => {
     it('should successfully register a new user and return a JWT', async () => {
-      const res = await request
-        .post('/api/auth/register')
-        .send(registerPayload)
-        .expect(201);
+      const res = await request.post('/api/auth/register').send(registerPayload).expect(201);
 
       expect(res.body).toHaveProperty('token');
       expect(res.body.user).toEqual({
@@ -120,10 +117,7 @@ describe('Authentication Flow', () => {
       await request.post('/api/auth/register').send(registerPayload).expect(201);
 
       // Attempt second registration
-      const res = await request
-        .post('/api/auth/register')
-        .send(registerPayload)
-        .expect(409);
+      const res = await request.post('/api/auth/register').send(registerPayload).expect(409);
 
       expect(res.body.error).toBe('Email already registered');
     });

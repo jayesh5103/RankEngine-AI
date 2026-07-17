@@ -17,7 +17,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 12;  // 96-bit nonce — recommended for GCM
+const IV_LENGTH = 12; // 96-bit nonce — recommended for GCM
 const TAG_LENGTH = 16; // 128-bit auth tag
 
 function getKey(): Buffer {
@@ -25,7 +25,7 @@ function getKey(): Buffer {
   if (raw.length !== 64) {
     throw new Error(
       'ENCRYPTION_KEY must be a 64-character hex string (32 bytes). ' +
-        'Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+        "Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
     );
   }
   return Buffer.from(raw, 'hex');
